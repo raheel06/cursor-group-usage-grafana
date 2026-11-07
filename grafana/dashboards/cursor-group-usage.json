@@ -1,0 +1,758 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT COALESCE(SUM(spend),0) AS value FROM cursor_member_current;",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Current Consumption",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT COALESCE(SUM(user_max_limit),0) AS value FROM (SELECT user_id, MAX(GREATEST(COALESCE(group_limit_per_user,0), COALESCE(effective_limit,0))) AS user_max_limit FROM cursor_group_member_current WHERE group_id != '__unassigned__' GROUP BY user_id UNION ALL SELECT user_id, GREATEST(40, COALESCE(effective_limit,0)) FROM cursor_group_member_current WHERE group_id = '__unassigned__') t;",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Assigned Limit",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 7,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "WITH total_spend AS (SELECT COALESCE(SUM(spend),0) AS spend FROM cursor_member_current), total_limit AS (SELECT COALESCE(SUM(user_max_limit),0) AS lim FROM (SELECT user_id, MAX(GREATEST(COALESCE(group_limit_per_user,0), COALESCE(effective_limit,0))) AS user_max_limit FROM cursor_group_member_current WHERE group_id != '__unassigned__' GROUP BY user_id UNION ALL SELECT user_id, GREATEST(40, COALESCE(effective_limit,0)) FROM cursor_group_member_current WHERE group_id = '__unassigned__') t) SELECT CASE WHEN (SELECT SUM(lim) FROM total_limit) = 0 THEN 0 ELSE (SELECT spend FROM total_spend) / (SELECT SUM(lim) FROM total_limit) * 100 END AS value;",
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Utilization",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 14,
+        "x": 10,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT COALESCE((SELECT status FROM collector_status WHERE id=1),'No data') AS \"Status\", (SELECT COUNT(*) FROM cursor_group_current WHERE group_id != '__unassigned__') AS \"Groups\", (SELECT COUNT(*) FROM cursor_member_current) AS \"Users\", (SELECT COUNT(*) FROM cursor_member_current WHERE user_id IN (SELECT user_id FROM cursor_group_member_current WHERE group_id='__unassigned__')) AS \"Unassigned\", TO_CHAR((SELECT refreshed_at FROM collector_status WHERE id=1) AT TIME ZONE 'Asia/Dubai','YYYY-MM-DD HH24:MI') AS \"Last Refresh (GST)\", COALESCE(TO_CHAR(TO_TIMESTAMP((SELECT subscription_cycle_start FROM collector_status WHERE id=1)/1000) AT TIME ZONE 'Asia/Dubai','YYYY-MM-DD'),'-') AS \"Cycle Start\";",
+          "refId": "A"
+        }
+      ],
+      "title": "Collector Overview",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Limit / User"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Assigned Limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current Consumption"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Remaining"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Utilization %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green"
+                    },
+                    {
+                      "color": "orange",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                },
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Utilization %"
+          }
+        ]
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT\n  g.group_name AS \"Group\",\n  g.member_count AS \"Members\",\n  COALESCE(p.billed_count, 0) AS \"Billed Members\",\n  ROUND(COALESCE(p.billed_count, 0)::numeric / NULLIF((SELECT COUNT(DISTINCT user_id) FROM cursor_group_member_current), 0) * 100, 1) AS \"User Assignment %\",\n  g.group_limit_per_user AS \"Limit / User\",\n  COALESCE(p.billed_limit, 0) AS \"Assigned Limit\",\n  COALESCE(p.billed_spend, 0) AS \"Current Consumption\",\n  CASE WHEN COALESCE(p.billed_limit, 0) = 0 THEN NULL ELSE COALESCE(p.billed_limit, 0) - COALESCE(p.billed_spend, 0) END AS \"Remaining\",\n  CASE WHEN COALESCE(p.billed_limit, 0) = 0 THEN NULL ELSE ROUND(COALESCE(p.billed_spend, 0) / COALESCE(p.billed_limit, 0) * 100, 1) END AS \"Utilization %\",\n  g.members_over_80 AS \">80%\",\n  g.refreshed_at AS \"Last Updated\"\nFROM cursor_group_current g\nLEFT JOIN (\n  SELECT group_id,\n    COUNT(*) AS billed_count,\n    SUM(group_limit) AS billed_limit,\n    SUM(spend) AS billed_spend\n  FROM (\n    SELECT m.group_id, m.user_id,\n      GREATEST(COALESCE(m.group_limit_per_user,0), COALESCE(m.effective_limit,0)) AS group_limit,\n      m.spend,\n      ROW_NUMBER() OVER (PARTITION BY m.user_id ORDER BY GREATEST(COALESCE(m.group_limit_per_user,0), COALESCE(m.effective_limit,0)) DESC, COALESCE(m.group_limit_per_user,0) DESC, m.group_id) AS rn\n    FROM cursor_group_member_current m\n    WHERE m.group_id != '__unassigned__'\n  ) t\n  WHERE rn = 1\n  GROUP BY group_id\n) p ON p.group_id = g.group_id\nWHERE g.group_id != '__unassigned__'\nUNION ALL\nSELECT\n  'unassigned-users' AS \"Group\",\n  u.member_count AS \"Members\",\n  u.billed_count AS \"Billed Members\",\n  ROUND(u.billed_count::numeric / NULLIF((SELECT COUNT(DISTINCT user_id) FROM cursor_group_member_current), 0) * 100, 1) AS \"User Assignment %\",\n  40 AS \"Limit / User\",\n  u.billed_limit AS \"Assigned Limit\",\n  u.billed_spend AS \"Current Consumption\",\n  u.billed_limit - u.billed_spend AS \"Remaining\",\n  ROUND(u.billed_spend / NULLIF(u.billed_limit, 0) * 100, 1) AS \"Utilization %\",\n  0 AS \">80%\",\n  NOW() AS \"Last Updated\"\nFROM (\n  SELECT COUNT(*) AS member_count, COUNT(*) AS billed_count, SUM(GREATEST(40, COALESCE(effective_limit, 0))) AS billed_limit, SUM(spend) AS billed_spend\n  FROM cursor_group_member_current\n  WHERE group_id = '__unassigned__'\n) u\nORDER BY \"Utilization %\" DESC NULLS LAST;",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor Group Consumption",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Applicable Limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Included"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Overage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current Consumption"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Effective User Limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Usage %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green"
+                    },
+                    {
+                      "color": "orange",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                },
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "auto",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT\n  group_name AS \"Group\",\n  email AS \"User\",\n  applicable_limit AS \"Applicable Limit\",\n  spend AS \"Current Consumption\",\n  spend_included AS \"Included\",\n  spend_overage AS \"Overage\",\n  ROUND(group_usage_percent,1) AS \"Usage %\",\n  effective_limit AS \"Effective User Limit\"\nFROM cursor_user_report\nWHERE group_usage_percent >= 90\nORDER BY group_usage_percent DESC NULLS LAST;",
+          "refId": "A"
+        }
+      ],
+      "title": "Users Approaching Their Group Limit",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "description": "Users assigned to more than one tracked directory group. Shows all groups per user and their applicable limit in each.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current Consumption"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Max Applicable Limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT u.email AS \"User\", u.display_name AS \"Name\", u.member_count AS \"Group Count\", u.groups AS \"Groups\", mc.spend AS \"Current Consumption\", u.max_limit AS \"Max Applicable Limit\" FROM (SELECT email, display_name, COUNT(*) AS member_count, STRING_AGG(group_name, ', ' ORDER BY group_name) AS groups, MAX(applicable_limit) AS max_limit FROM cursor_user_report WHERE group_id != '__unassigned__' GROUP BY email, display_name HAVING COUNT(*) > 1) u JOIN cursor_member_current mc ON mc.email = u.email ORDER BY u.member_count DESC, u.email;",
+          "refId": "A"
+        }
+      ],
+      "title": "Multi-Group Users",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "cursor-postgres"
+      },
+      "description": "Members in no tracked directory group (group_id __unassigned__). Same spend source as other tables.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current Consumption"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Effective User Limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Usage %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT email AS \"User\", display_name AS \"Name\", spend AS \"Current Consumption\", ROUND(group_usage_percent,1) AS \"Usage %\", effective_limit AS \"Effective User Limit\" FROM cursor_user_report WHERE group_id = '__unassigned__' ORDER BY spend DESC NULLS LAST;",
+          "refId": "A"
+        }
+      ],
+      "title": "Unassigned Users",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 42,
+  "tags": [
+    "cursor",
+    "usage",
+    "groups"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Cursor Group Usage",
+  "uid": "cursor-group-usage",
+  "version": 18
+}
